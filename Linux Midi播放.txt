@@ -1,0 +1,220 @@
+﻿amidi   -p hw:2,0,0 -S '09 97 3B 4F'
+amidi -l
+hw:2,0,0     // three arguments (in order: CARD,DEV,SUBDEV) 
+
+The hw device description uses the hw plugin. The three arguments (in order: CARD,DEV,SUBDEV) 
+specify card number or identifier, device number and subdevice number (-1 means any).
+Example:
+hw
+hw:0
+hw:0,0
+hw:supersonic,1
+hw:soundwave,1,2
+hw:DEV=1,CARD=soundwave,SUBDEV=2
+
+amidi -p hw:2,0 -S "09 9B 3c 72"
+
+Turning Off All Notes
+amidi -p hw:2,0 -S "00 B0 7B 00"      // all notes off on channel 0. for all channel B0--BF
+
+amidi   -p hw:2,0,0 -S '09 97 3B 4F'
+
+sudo modprobe snd-virmidi
+wkm@wkm-Z97-HD3:~$ amidi   -l
+Dir Device    Name
+IO  hw:2,0,0  5504-EK MIDI 1
+IO  hw:3,0    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,1    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,2    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,3    Virtual Raw MIDI (16 subdevices)
+
+SYNOPSIS
+       amidi [-p port] [-s file | -S data] [-r file] [-d] [-t seconds] [-a]
+
+DESCRIPTION
+       amidi  is  a  command-line utility which allows one to receive and send
+       SysEx (system exclusive) data from/to external MIDI  devices.   It  can
+       also send any other MIDI commands.
+       amidi  handles  only files containing raw MIDI commands, without timing
+       information.  amidi does not support Standard MIDI  (.mid)  files,  but
+       aplaymidi(1) and arecordmidi(1) do.
+EXAMPLES
+       amidi -p hw:0 -s my_settings.syx
+              will send the MIDI commands in my_settings.syx to port hw:0.
+       amidi -S 'F0 43 10 4C 00 00 7E 00 F7'
+              sends an XG Reset to the default port.
+       amidi -p hw:1,2 -S F0411042110C000000000074F7 -r dump.syx -t 1
+              sends  a  “Parameter  Dump  Request”  to  a GS device, saves the
+              received parameter data to the file dump.syx,  and  stops  after
+              the  device  has  finished  sending  data (when no data has been
+              received for one second).
+       amidi -p virtual -d
+              creates a virtual RawMIDI port and prints all data sent to  this
+              port.
+
+---------------------------------------------------------
+
+acconect -o
+aplaymidi -l
+aplaymidi --port=24:0 clothe.mid 
+
+---------------------------------------------------------
+
+// Start and enable the timidity.service. 
+timidity -iA
+
+//另开一个终端
+acconect -o
+
+    client 14: 'Midi Through' [type=kernel]
+        0 'Midi Through Port-0'
+    client 24: '5504-EK' [type=kernel]
+        0 '5504-EK MIDI 1  '
+    client 128: 'TiMidity' [type=user]
+        0 'TiMidity port 0 '
+        1 'TiMidity port 1 '
+        2 'TiMidity port 2 '
+        3 'TiMidity port 3 '
+
+aplaymidi --port=128:0 clothe.mid 
+
+---------------------------------------------------------
+
+
+timidity clothe.mid 				
+timidity -ig clothe.mid 
+timidity -in clothe.mid 
+
+
+﻿timidity用的设置名来自aplay -l, aplay -L而非amidi -l.
+
+timidity -ig clothe.mid             电脑播放
+timidity -Os -o hw:1 clothe.mid     电脑上默认声卡0号声卡如果不能使用,使用1号声卡.
+timidity  -Os --output-file=sysdefault:CARD=PCH  clothe.mid 
+
+/usr/share/alsa/alsa.conf中追加PCM设备(1号声卡)
+pcm.ktvdefaultcard {
+  type hw
+  card 1
+  device 0
+}   
+就可以使用自己设置的ktvdefaultcard设备播放了
+timidity -Os -o ktvdefaultcard clothe.mid
+
+ 提供timidity服务端口(midi in, midi out).
+一些播放器如RoseGarden,aplaymidi要在电脑上播放midi可以使用timidity端口作为midi out端口.
+RoseGarden(manage MIDI Devices按钮选择timidity端口作MIDI输出)
+
+timidity --track Wish_You_Were_Here_lyric.mid    播放歌词显示时间
+timidity播放音乐及歌词及音轨信息
+timidity Wish_You_Were_Here_lyric.mid
+
+Requested buffer size 32768, fragment size 8192
+ALSA pcm 'default' set buffer size 32768, period size 8192 bytes
+Playing Wish_You_Were_Here_lyric.mid
+MIDI file: Wish_You_Were_Here_lyric.mid
+Format: 1  Tracks: 11  Divisions: 240
+Text: WISH YOU WHERE HERE by Pink Floyd
+Track name: Soft Karaoke
+Text: @KMIDI KARAOKE FILE
+Text: @I Lyrics entered by Alessandro Avancini
+Text: @I aavancin@sun10.inf.unitn.it
+Track name: Words
+Text:  
+Text: Strings
+Text: Steel-stGt
+Text: FingeredBs
+Text: Sweep Pad
+Text: Overdrive
+Text: Seq. by: Norma Williams
+Text: Percussion
+
+Language: ENGL
+Title: WISH YOU WHERE HERE
+Title: Pink Floyd
+
+So, so  you think you can tell
+Heaven from Hell
+Blue skies from pain
+Can you tell a green field
+from a cold steel rail?
+A smile from a veil?
+
+--------------------------------------------------------------------------------
+
+aconnect -i     得到MIDI输入端口
+aconnect -o     得到MIDI输出端口
+
+--------------------------------------------------------------------------------
+1.先在一个窗口运行timidity -iA                        提供timidity服务端口
+  或运行qSynth      提供qSynth端口
+2.然后在另一个窗口执行
+  aplaymidi -l  或  aplaymidi --list  或  aconnect -o     得到MIDI输出端口
+  wkm@wkm-Z97-HD3:~/Desktop/Link to Sam5504_Midi/Tmp$ aplaymidi -l
+
+  Port    Client name                Port name
+   14:0    Midi Through              Midi Through Port-0      // [type=kernel]  
+                                     // Midi Through port is not useful
+
+   24:0    5504-EK                   5504-EK MIDI 1           // 在5504端口   
+  128:0    FLUID Synth (16337)       Synth input port (16337:0)// qSynth端口
+  129:0    TiMidity                  TiMidity port 0          // [type=user] TiMidity端口
+  129:1    TiMidity                  TiMidity port 1
+  129:2    TiMidity                  TiMidity port 2
+  129:3    TiMidity                  TiMidity port 3
+
+3.aplaymidi --port=24:0 clothe.mid    在5504开发板上播放
+                                      音响接5504开发板
+  aplaymidi --port=128:0 clothe.mid   在qSynth
+  aplaymidi --port=129:0 clothe.mid   在电脑上播放,音响接电脑.
+  aplaymidi -p 129:0 clothe.mid       在电脑上播放,音响接电脑.
+--------------------------------------------------------------------------------
+apt-get install qsynth
+qSynth设置
+现在需要用qsynth来配置引擎及加载音色库了。
+[setup...]按钮，MIDI标签页中，确保勾选了Enable Midi Input并选择了合适的驱动（一般alsa-seq即可），否则后面会找不到midi输入接口。在Audio标签页中，根据个人情况选择音频驱动即可，推荐使用jack，用alsa也是可以的。
+在Soundfonts中，点击[open...]来加载sf2音色库文件。
+如果一切正常，各个旋钮都可以进入可用状态合成器/采样器和音色库就配置完成了。
+--------------------------------------------------------------------------------
+1 apt-get install jackd 
+--------------------------------------------------------------------------------
+安装以下软件包及其依赖包：jackd, qjackctl(Jack的图形前端), qsynth(fluidsynth的图形前端）, rosegarden, fluid-soundfont-gm (一个音色库文件）。
+sudo aptitude install jackd qjackctl qsynth rosegarden fluid-soundfont-gm
+--------------------------------------------------------------------------------
+sudo modprobe snd-virmidi
+wkm@wkm-Z97-HD3:~$ amidi   -l
+Dir Device    Name
+IO  hw:2,0,0  5504-EK MIDI 1
+IO  hw:3,0    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,1    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,2    Virtual Raw MIDI (16 subdevices)
+IO  hw:3,3    Virtual Raw MIDI (16 subdevices)
+
+--------------------------------------------------------------------------------
+fluidsynth更换音色库Sound Font播放MIDI
+ fluidsynth -a alsa -l <sound font> <files...>
+
+ fluidsynth -a alsa -l ./sf2/Hubbe64MB.sf2 clothe.mid 
+#fluidsynth -a alsa -l ./sf2/Chaos_V20.sf2 clothe.mid 
+#fluidsynth -a alsa -l ./sf2/MicrosoftGS.sf2 clothe.mid 
+#fluidsynth -a alsa -l ./sf2/TimGM6mb.sf2 clothe.mid 
+
+fluidsynth -F out.wav /usr/share/sounds/sf2/FluidR3_GM.sf2 myfile.mid		// fluidsynth输出到Wav文件
+
+fluidsynth can be run as a server in the same way as TiMidity. Use this:
+
+fluidsynth --server --audio-driver=alsa /usr/share/sounds/sf2/FluidR3_GM.sf2		// 一个终端窗口作为后台服务
+
+// 另一终端窗口播放Midi.
+Then a connect -o will show the ports, and it can be played to with the following:
+amidi -p 128:0 <midi-file>       // 不能播放
+
+root@wkm-Z97-HD3:/home/wkm/test/midi# aplaymidi -l
+ Port    Client name                      Port name
+ 14:0    Midi Through                     Midi Through Port-0
+ 24:0    5504-EK                          5504-EK MIDI 1
+128:0    FLUID Synth (4333)               Synth input port (4333:0)
+
+aplaymidi -p 128 clothe.mid 
+
+--------------------------------------------------------------------------------
